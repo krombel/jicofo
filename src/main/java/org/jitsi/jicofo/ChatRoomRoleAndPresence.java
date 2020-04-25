@@ -224,6 +224,7 @@ public class ChatRoomRoleAndPresence
             return;
         }
 
+        ChatRoomMember oldestMember = null;
         for (ChatRoomMember member : chatRoom.getMembers())
         {
             if (conference.isFocusMember((XmppChatMember) member)
@@ -243,16 +244,22 @@ public class ChatRoomRoleAndPresence
             }
             else
             {
-                // Elect new owner
-                if (grantOwner(((XmppChatMember)member).getJid()))
-                {
-                    logger.info(
-                        "Granted owner to " + member.getContactAddress());
-
-                    owner = member;
+                if (oldestMember == null) {
+                    oldestMember = member;
+                } else {
+                    if (((XmppChatMember)member).getJoinOrderNumber() < ((XmppChatMember)oldestMember).getJoinOrderNumber()) {
+                        oldestMember = member;
+                    }
                 }
-                break;
             }
+        }
+        // Elect new owner
+        if (oldestMember != null && grantOwner(((XmppChatMember)oldestMember).getJid()))
+        {
+            logger.info(
+                "Granted owner to " + oldestMember.getContactAddress());
+
+            owner = oldestMember;
         }
     }
 
